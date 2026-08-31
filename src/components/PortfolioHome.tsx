@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, Menu, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Home, Menu, X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -10,11 +10,11 @@ import projectThree from "../assets/project-03.jpg";
 import showcaseImage from "../assets/showcase.jpg";
 
 const services = [
-  ["01", "Web Design", "Editorial layouts and art direction for ambitious brands."],
-  ["02", "Creative Dev", "Motion-first frontends with cinematic scroll choreography."],
-  ["03", "UI / UX", "Interfaces engineered for precision and effortless flow."],
-  ["04", "Branding", "Identity systems and title-sequence typography."],
-  ["05", "Digital Strategy", "Clear creative systems from first idea to launch."],
+  ["01", "Web Design", "Editorial digital experiences made responsive, clear, and memorable.", "Figma · Framer · Webflow · Prototyping"],
+  ["02", "Creative Development", "Motion-first frontends with cinematic scroll choreography.", "React · TypeScript · GSAP · WebGL"],
+  ["03", "UI / UX", "Product interfaces engineered for precision and effortless flow.", "Research · Systems · Interaction · Testing"],
+  ["04", "Visual Identity", "Distinctive identity systems with expressive digital behavior.", "Art direction · Type · Motion · Campaigns"],
+  ["05", "Digital Strategy", "Focused creative systems that carry an idea from concept to launch.", "Positioning · Content · Direction · Launch"],
 ];
 
 const skills = [
@@ -38,6 +38,10 @@ export function PortfolioHome() {
   const flipSectionRef = useRef<HTMLElement>(null);
   const flipCardRef = useRef<HTMLDivElement>(null);
   const videoLayerRef = useRef<HTMLDivElement>(null);
+  const servicesSectionRef = useRef<HTMLElement>(null);
+  const serviceIntroRef = useRef<HTMLDivElement>(null);
+  const serviceCardsRef = useRef<Array<HTMLElement | null>>([]);
+  const serviceImagesRef = useRef<Array<HTMLImageElement | null>>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -51,6 +55,12 @@ export function PortfolioHome() {
     const context = gsap.context(() => {
       if (reduceMotion) return;
 
+      gsap.timeline({ defaults: { ease: "power4.out" } })
+        .from("[data-hero-word]", { yPercent: 115, duration: 1.15, stagger: 0.08 })
+        .from("[data-hero-portrait]", { y: 90, rotate: -5, scale: 0.86, opacity: 0, duration: 1.1 }, 0.14)
+        .from("[data-hero-meta]", { y: 22, opacity: 0, duration: 0.7, stagger: 0.08 }, 0.45)
+        .from("[data-desktop-dock]", { y: 60, opacity: 0, duration: 0.8 }, 0.7);
+
       gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((element) => {
         gsap.fromTo(element, { y: 48, opacity: 0 }, {
           y: 0,
@@ -62,16 +72,46 @@ export function PortfolioHome() {
       });
 
       gsap.to("[data-hero-title]", {
-        yPercent: 16,
+        yPercent: -18,
+        opacity: 0.18,
         ease: "none",
         scrollTrigger: { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: 0.6 },
       });
       gsap.to("[data-hero-portrait]", {
-        yPercent: -12,
-        rotate: 1,
+        yPercent: 48,
+        xPercent: 10,
+        rotate: 7,
+        scale: 0.9,
         ease: "none",
         scrollTrigger: { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: 0.6 },
       });
+
+      const serviceCards = serviceCardsRef.current.filter((card): card is HTMLElement => Boolean(card));
+      const serviceImages = serviceImagesRef.current.filter((image): image is HTMLImageElement => Boolean(image));
+      if (servicesSectionRef.current && serviceIntroRef.current && serviceCards.length) {
+        gsap.set(serviceCards, { yPercent: 125, opacity: 0, rotate: 2 });
+        gsap.set(serviceImages.slice(1), { opacity: 0, scale: 1.08 });
+        const servicesTimeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: servicesSectionRef.current,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.8,
+            pin: "[data-services-stage]",
+            anticipatePin: 1,
+          },
+        });
+        servicesTimeline.to(serviceIntroRef.current, { y: -70, opacity: 0, duration: 0.7, ease: "power2.in" });
+        serviceCards.forEach((card, index) => {
+          const position = 0.55 + index * 1.05;
+          servicesTimeline.to(card, { yPercent: 0, opacity: 1, rotate: index % 2 ? 0.7 : -0.5, duration: 0.9, ease: "power3.out" }, position);
+          if (index > 0) {
+            servicesTimeline.to(serviceCards[index - 1], { y: -38, scale: 0.965, opacity: 0.22, duration: 0.75, ease: "power2.inOut" }, position);
+            servicesTimeline.to(serviceImages[index - 1], { opacity: 0, scale: 0.94, duration: 0.55 }, position);
+          }
+          servicesTimeline.to(serviceImages[index], { opacity: 1, scale: 1, duration: 0.7, ease: "power2.out" }, position);
+        });
+      }
 
       if (flipSectionRef.current && flipCardRef.current && videoLayerRef.current) {
         gsap.timeline({
@@ -111,9 +151,6 @@ export function PortfolioHome() {
             <span className="font-display text-xl uppercase">Mara Voss</span>
             <span className="hidden font-mono text-[10px] text-ink-muted sm:inline">(creative developer)</span>
           </a>
-          <nav className="hidden items-center gap-8 font-mono text-[11px] uppercase tracking-[0.15em] md:flex" aria-label="Primary navigation">
-            {["work", "services", "skills", "contact"].map((item) => <a key={item} href={`#${item}`} className="nav-link">{item}</a>)}
-          </nav>
           <div className="flex items-center gap-3">
             <a href="#contact" className="hidden bg-ink px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-signal sm:inline-block">Let&apos;s talk</a>
             <button className="grid size-10 place-items-center md:hidden" onClick={() => setMenuOpen((open) => !open)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen}>
@@ -135,30 +172,31 @@ export function PortfolioHome() {
         </div>
       </header>
 
+      <nav data-desktop-dock className="fixed bottom-5 left-1/2 z-50 hidden h-14 -translate-x-1/2 items-center gap-1 rounded-full border border-paper/15 bg-ink px-2 text-paper shadow-dock md:flex" aria-label="Primary navigation">
+        <a href="#top" className="grid size-10 place-items-center rounded-full transition-colors hover:bg-paper/10" aria-label="Home"><Home size={16} /></a>
+        {["services", "skills", "work"].map((item) => <a key={item} href={`#${item}`} className="dock-link">{item}</a>)}
+        <a href="#contact" className="ml-1 rounded-full bg-signal px-5 py-3 font-mono text-[10px] uppercase text-paper transition-transform hover:scale-[1.03]">Contact</a>
+      </nav>
+
       <main>
-        <section id="top" data-hero className="relative mx-auto max-w-[1400px] px-5 pb-16 pt-28 md:min-h-[calc(100svh-68px)] lg:px-10 lg:pb-24 lg:pt-32">
-          <div className="relative md:min-h-[calc(100svh-12rem)]">
-            <div className="absolute right-8 top-2 hidden size-28 rounded-full bg-signal md:block motion-safe:animate-slow-spin" />
-            <div className="absolute left-2 top-40 hidden size-16 bg-electric md:block animate-pop" />
-            <div className="absolute bottom-6 right-[36%] hidden size-14 bg-sun md:block animate-pop-delayed" />
-            <p className="animate-rise font-mono text-[11px] uppercase tracking-[0.25em] text-ink-muted">Creative Developer / Berlin — 2026</p>
-            <h1 data-hero-title className="relative z-10 mt-5 max-w-[8ch] animate-rise-delayed font-display text-[clamp(4.5rem,15vw,13rem)] uppercase leading-[0.78] md:max-w-none">
-              Mara <span className="text-ink/20">Voss</span>
+        <section id="top" data-hero className="relative min-h-[115svh] px-5 pb-24 pt-24 lg:px-10">
+          <div className="sticky top-0 mx-auto flex h-svh max-w-[1400px] items-center overflow-hidden">
+            <div className="relative w-full pb-12">
+            <p data-hero-meta className="absolute left-[4%] top-[15%] hidden text-sm text-ink-muted md:block">Award-winning creative developer</p>
+            <p data-hero-meta className="absolute right-[5%] top-[15%] hidden text-sm text-ink-muted md:block">Designer &amp; art director</p>
+            <h1 data-hero-title className="relative z-10 flex flex-col overflow-hidden font-display text-[clamp(5.5rem,15vw,13rem)] uppercase leading-[0.78] md:flex-row md:justify-between">
+              <span className="overflow-hidden"><span data-hero-word className="block">Mara</span></span>
+              <span className="overflow-hidden text-ink/20"><span data-hero-word className="block">Voss</span></span>
             </h1>
-            <figure data-hero-portrait className="relative z-20 ml-auto mt-8 w-[78%] max-w-[440px] animate-rise-late md:absolute md:right-10 md:top-[18%] md:mt-0 md:w-[39%] lg:right-16">
-              <div className="-rotate-1 bg-signal p-1">
+            <figure data-hero-portrait className="relative z-20 mx-auto -mt-4 w-[68%] max-w-[340px] md:absolute md:left-1/2 md:top-1/2 md:mt-0 md:w-[24%] md:-translate-x-1/2 md:-translate-y-1/2">
+              <div className="overflow-hidden rounded-[2rem] bg-signal p-1 shadow-portrait">
                 <img src={profileImage} alt="Portrait placeholder for Mara Voss" width={1024} height={1280} fetchPriority="high" className="aspect-[4/5] w-full object-cover" />
               </div>
-              <figcaption className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-ink-muted">
-                <span>Fig. 01 — Portrait</span><span>Available Q4</span>
-              </figcaption>
             </figure>
-            <div className="relative z-30 mt-10 max-w-[42ch] animate-rise-latest md:mt-16">
-              <p className="text-lg leading-relaxed text-ink-muted">I build cinematic, motion-driven websites and interactive brand systems — precise, tactile, and never template-like.</p>
-              <div className="mt-8 flex items-center gap-4">
-                <a href="#work" className="inline-flex items-center gap-3 bg-ink px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-signal">Selected work <ArrowDown size={14} /></a>
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted">Scroll</span>
-              </div>
+            <div data-hero-meta className="relative z-30 mt-8 flex items-end justify-between md:absolute md:inset-x-[5%] md:bottom-[4%] md:mt-0">
+              <p className="max-w-[32ch] text-sm leading-relaxed text-ink-muted">Cinematic websites and interactive brand systems — precise, tactile, and original.</p>
+              <a href="#services" className="flex items-center gap-2 font-mono text-[10px] uppercase text-ink-muted">Explore <ArrowDown size={14} /></a>
+            </div>
             </div>
           </div>
         </section>
@@ -195,18 +233,28 @@ export function PortfolioHome() {
           </div>
         </section>
 
-        <section id="services" className="bg-paper">
-          <div className="mx-auto max-w-[1400px] px-5 py-20 lg:px-10 lg:py-28">
-            <p className="section-label mb-8" data-reveal>(c) — Services</p>
-            <div className="border-t border-ink/20">
-              {services.map(([number, title, description]) => (
-                <a href="#contact" key={number} data-reveal className="service-row group grid grid-cols-12 items-baseline gap-4 border-b border-ink/20 py-6 lg:py-8">
-                  <span className="col-span-2 font-mono text-xs text-ink-muted lg:col-span-1">{number}</span>
-                  <span className="col-span-9 font-display text-3xl uppercase transition-transform duration-300 group-hover:translate-x-3 lg:col-span-5 lg:text-5xl">{title}</span>
-                  <span className="hidden max-w-[38ch] text-sm text-ink-muted lg:col-span-5 lg:block">{description}</span>
-                  <ArrowUpRight className="col-span-1 justify-self-end text-ink-muted transition-all group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-signal" size={18} />
-                </a>
-              ))}
+        <section id="services" ref={servicesSectionRef} className="relative h-[560vh] bg-secondary">
+          <div data-services-stage className="flex h-svh items-center overflow-hidden">
+            <div className="relative mx-auto h-[78vh] w-full max-w-[1400px] px-5 lg:px-10">
+              <div ref={serviceIntroRef} className="absolute left-5 top-1/2 z-20 max-w-[500px] -translate-y-1/2 lg:left-10">
+                <p className="section-label mb-5">Services, skills, abilities</p>
+                <h2 className="text-5xl font-medium leading-[0.95] sm:text-7xl">What I do <span className="text-signal">best.</span></h2>
+                <p className="mt-6 max-w-[46ch] text-sm leading-relaxed text-ink-muted">I combine strategy, design, and creative development to shape distinctive digital experiences.</p>
+              </div>
+              <div className="absolute inset-x-5 bottom-0 top-[30%] sm:top-[20%] lg:inset-y-[4%] lg:left-10 lg:right-auto lg:w-[48%]">
+                {services.map(([number, title, description, tools], index) => (
+                  <article ref={(element) => { serviceCardsRef.current[index] = element; }} key={number} className="service-card absolute inset-x-0 top-0 min-h-[320px] border border-ink/10 bg-paper p-7 shadow-card sm:p-10 lg:min-h-[410px]">
+                    <p className="font-mono text-[10px] uppercase text-ink-muted">{index === 0 ? "Top performing" : index === 4 ? "Detail driven + AI" : "Selected capability"}</p>
+                    <div className="mt-8 flex items-start justify-between gap-4"><h3 className="text-3xl font-medium sm:text-4xl">{number}. {title}</h3><ArrowUpRight className="mt-1 shrink-0 text-signal" size={20} /></div>
+                    <p className="mt-8 max-w-[40ch] text-sm leading-relaxed text-ink-muted">{description}</p>
+                    <p className="mt-10 border-t border-ink/15 pt-5 font-mono text-[10px] uppercase leading-loose text-ink-muted">{tools}</p>
+                  </article>
+                ))}
+              </div>
+              <div className="absolute bottom-[4%] right-[5%] top-[12%] hidden w-[34%] overflow-hidden rounded-[2rem] bg-ink shadow-portrait lg:block">
+                {[profileImage, projectOne, projectTwo, projectThree, showcaseImage].map((image, index) => <img ref={(element) => { serviceImagesRef.current[index] = element; }} key={image} src={image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />)}
+                <div className="absolute inset-x-0 bottom-0 bg-ink/70 p-8 text-paper backdrop-blur-sm"><p className="font-display text-3xl uppercase">Mara Voss</p><p className="text-sm text-paper/65">Creative developer &amp; designer</p></div>
+              </div>
             </div>
           </div>
         </section>
